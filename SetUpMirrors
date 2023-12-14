@@ -1,0 +1,68 @@
+import serial
+import time
+import json
+
+# Constants
+MAX_COM_PORT = 14
+JSON_FILE = "detected_devices.json"
+
+
+def get_unique_identifier(port):
+    try:
+        # Establish the connection with detailed parameters
+        with serial.Serial(port, baudrate=256000, bytesize=serial.EIGHTBITS, 
+                           parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, 
+                           timeout=1) as ser:
+            
+            # Send the handshake command and wait for an "OK" response
+            print(f"Connected to {port}. Sending handshake...")
+            ser.write(b'start\r\n')
+            time.sleep(0.5)  # give some time for the device to respond
+            handshake_response = ser.read(ser.inWaiting()).decode('utf-8', errors='ignore').strip()
+            
+            if handshake_response != "OK":
+                print(f"Handshake failed for {port}. Received: {handshake_response}")
+                return None
+            
+            # Handshake successful; now request board and device serial numbers
+            ser.write(b'getsn\r\n')
+            time.sleep(0.5)
+            serial_response = ser.read(ser.inWaiting()).decode('utf-8', errors='ignore').strip()
+            
+            # Check if the response is valid and contains board and device serial numbers
+            if serial_response.startswith("Board:") and "Device:" in serial_response:
+                print(f"Serial numbers from {port}: {serial_response}")
+                return serial_response
+            else:
+                print(f"Unexpected response after handshake from {port}: {serial_response}")
+                return None
+    except serial.SerialException as e:
+        print(f"Error with {port}: {e}")
+        return None
+
+
+def detect_devices_on_com_ports():
+    """Detect devices on COM ports and return a dictionary with their identifiers and COM ports."""
+    detected_devices = {}
+    for port_num in range(1, MAX_COM_PORT + 1):
+        port_name = f"COM{port_num}"
+        identifier = get_unique_identifier(port_name)
+        if identifier:
+            detected_devices[identifier] = port_name
+            print(f"Detected device: {identifier} on {port_name}")
+
+    return detected_devices
+
+def save_to_json(data, filename):
+    """Save data to a JSON file."""
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+
+if __name__ == "__main__":
+    detected_devices = detect_devices_on_com_ports()
+    
+    if detected_devices:
+        save_to_json(detected_devices, JSON_FILE)
+        print(f"Saved detected devices to {JSON_FILE}")
+    else:
+        print("No devices detected.")
