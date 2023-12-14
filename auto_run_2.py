@@ -202,7 +202,7 @@ def cycle_positions(mirrors, num_cycles):
     if saved_positions is None:
         return
 
-    sequence = ["1", "2", "3", "4", "5", "6", "21", "22", "27", "31", "32", "37", "41", "42","47", "51", "52", "57", "61", "62", "67"]
+    sequence = [ "2", "3", "4", "5", "6", "21", "22", "27", "31", "32", "37", "41", "42","47", "51", "52", "57", "61", "62", "67"]
     measurements = {vector: [] for vector in sequence}
 
     for cycle in range(num_cycles):
@@ -212,11 +212,11 @@ def cycle_positions(mirrors, num_cycles):
                 positions = saved_positions[set_name]
                 apply_positions(positions, mirrors)
 
-                time.sleep(3)
+                time.sleep(1)
                 send_command("TRIGGERSW")
                 time.sleep(0.5)
                 ser.readline()  # Consume the 'TRIGGERSW OK' line
-
+                read_serial_line(ser)
                 try:
                     distance_line = ser.readline().decode("ascii").strip()
                     if ':' in distance_line:
@@ -241,7 +241,7 @@ def cycle_positions(mirrors, num_cycles):
                    for set_name, distances in measurements.items()}
 
     # Optionally,  print or return the mean values
-    print("Mean Values:", mean_values)
+    #print("Mean Values:", mean_values)
     return mean_values
 
 #Known Mirror coordinates 
@@ -304,25 +304,25 @@ if __name__ == "__main__":
     clear_serial_buffers(ser)
     time.sleep(1)
     # Example usage
-mean_values = cycle_positions(mirrors, 10)
+mean_values = cycle_positions(mirrors, 1)
 
-M2T1 = mean_values["21"] - mean_values["2"]
-M3T1 = mean_values["31"] - mean_values["3"]
-M4T1 = mean_values["41"] - mean_values["4"]
-M5T1 = mean_values["51"] - mean_values["5"]
-M6T1 = mean_values["61"] - mean_values["6"]
+M2T1 = 2.470511 #mean_values["21"] - mean_values["2"]
+M3T1 = 2.479467 #mean_values["31"] - mean_values["3"]
+M4T1 = 2.440511 #mean_values["41"] - mean_values["4"]
+M5T1 = 2.143644 #mean_values["51"] - mean_values["5"]
+M6T1 = 2.187378 #mean_values["61"] - mean_values["6"]
 
-M2T2 = mean_values["22"] - mean_values["2"]
-M3T2 = mean_values["32"] - mean_values["3"]
-M4T2 = mean_values["42"] - mean_values["4"]
-M5T2 = mean_values["52"] - mean_values["5"]
-M6T2 = mean_values["62"] - mean_values["6"]
+M2T2 = 2.320767 #mean_values["22"] - mean_values["2"] 
+M3T2 = 2.233856 #mean_values["32"] - mean_values["3"]
+M4T2 = 2.295733 #mean_values["42"] - mean_values["4"]
+M5T2 = 2.302289 #mean_values["52"] - mean_values["5"]
+M6T2 = 2.2375   #mean_values["62"] - mean_values["6"]
 
-M2T3 = mean_values["27"] - mean_values["2"]
-M3T3 = mean_values["37"] - mean_values["3"]
-M4T3 = mean_values["47"] - mean_values["4"]
-M5T3 = mean_values["57"] - mean_values["5"]
-M6T3 = mean_values["67"] - mean_values["6"]
+M2T3 = 1.711131 #mean_values["27"] - mean_values["2"]
+M3T3 = 1.647776 #mean_values["37"] - mean_values["3"]
+M4T3 = 1.585515 #mean_values["47"] - mean_values["4"]
+M5T3 = 1.487975 #mean_values["57"] - mean_values["5"]
+M6T3 = 1.544953 #mean_values["67"] - mean_values["6"]
 
 #solve retroreflector position
 T1 = least_squares(error, T1_guess, args=(M2T1, M3T1, M4T1, M5T1, M6T1)).x
@@ -338,32 +338,32 @@ ax = fig.add_subplot(111, projection='3d')
 
 ax.scatter(*T1, color='blue', label='T1')
 ax.scatter(*T2, color='red', label='T2')
-ax.scatter(*T3, color='yellow', label='T3')
-ax.scatter(*M2, color='grey', label='M2')
-ax.scatter(*M3, color='green', label='M3')
-ax.scatter(*M4, color='purple', label='M4')
-ax.scatter(*M5, color='orange', label='M5')
-ax.scatter(*M6, color='pink', label='M6')
+ax.scatter(*T3, color='green', label='T3')
+ax.scatter(*M2, color='black', label='M2')
+ax.scatter(*M3, color='black', label='M3')
+ax.scatter(*M4, color='black', label='M4')
+ax.scatter(*M5, color='black', label='M5')
+ax.scatter(*M6, color='black', label='M6')
 
-draw_line(M2, T1, 'red')
+draw_line(M2, T1, 'blue')
 draw_line(M2, T2, 'red')
-draw_line(M2, T3, 'red')
+draw_line(M2, T3, 'green')
 
-draw_line(M3, T1, 'green')
-draw_line(M3, T2, 'green')
+draw_line(M3, T1, 'blue')
+draw_line(M3, T2, 'red')
 draw_line(M3, T3, 'green')
 
-draw_line(M4, T1, 'purple')
-draw_line(M4, T2, 'purple')
-draw_line(M4, T3, 'purple')
+draw_line(M4, T1, 'blue')
+draw_line(M4, T2, 'red')
+draw_line(M4, T3, 'green')
 
-draw_line(M5, T1, 'orange')
-draw_line(M5, T2, 'orange')
-draw_line(M5, T3, 'orange')
+draw_line(M5, T1, 'blue')
+draw_line(M5, T2, 'red')
+draw_line(M5, T3, 'green')
 
-draw_line(M6, T1, 'pink')
-draw_line(M6, T2, 'pink')
-draw_line(M6, T3, 'pink')
+draw_line(M6, T1, 'blue')
+draw_line(M6, T2, 'red')
+draw_line(M6, T3, 'green')
 
 #labels and title
 ax.set_xlabel('X Coordinate')
